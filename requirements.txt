@@ -1,0 +1,8 @@
+aiogram==3.4.1
+python-dotenv
+aiohttp
+beautifulsoup4
+flask
+
+aiohttp-socks
+requests
