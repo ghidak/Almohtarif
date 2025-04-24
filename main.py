@@ -157,7 +157,9 @@ async def get_proxy(message: Message):
         )
 
     
-    proxy = None
+    
+    used_proxies = get_used_proxies(user_id)
+proxy = None
     max_attempts = 10  # عدد المحاولات للعثور على بروكسي شغال
     for _ in range(max_attempts):
         candidate = get_random_proxy()
@@ -168,7 +170,20 @@ async def get_proxy(message: Message):
             if candidate:
                 remove_proxy(candidate)
 
+    
+    for _ in range(max_attempts):
+        candidate = get_random_proxy()
+        if candidate and candidate not in used_proxies and await is_proxy_working(candidate):
+            proxy = candidate
+            break
+        elif candidate:
+            remove_proxy(candidate)
+
     if not proxy:
+        return await message.answer("⚠️ لم يتم العثور على بروكسي شغال أو جديد حالياً. حاول لاحقاً.")
+
+    save_used_proxy(user_id, proxy)
+
         return await message.answer("⚠️ لم يتم العثور على بروكسي شغال حالياً. حاول لاحقاً.")
 
 
@@ -486,6 +501,35 @@ async def fetch_proxies_periodically():
         await asyncio.sleep(2 * 60 * 60)  # كل ساعتين
 
 
+
+
+def get_used_proxies(user_id):
+    if not os.path.exists("used_proxies.txt"):
+        return set()
+    with open("used_proxies.txt", "r", encoding="utf-8") as f:
+        for line in f:
+            parts = line.strip().split(":")
+            if parts[0] == str(user_id):
+                return set(parts[1].split(",")) if len(parts) > 1 else set()
+    return set()
+
+def save_used_proxy(user_id, proxy):
+    used = get_used_proxies(user_id)
+    used.add(proxy)
+    lines = []
+    found = False
+    if os.path.exists("used_proxies.txt"):
+        with open("used_proxies.txt", "r", encoding="utf-8") as f:
+            for line in f:
+                parts = line.strip().split(":")
+                if parts[0] == str(user_id):
+                    line = f"{user_id}:{','.join(used)}\n"
+                    found = True
+                lines.append(line)
+    if not found:
+        lines.append(f"{user_id}:{proxy}\n")
+    with open("used_proxies.txt", "w", encoding="utf-8") as f:
+        f.writelines(lines)
 
 async def main():
     asyncio.create_task(fetch_proxies_periodically())
