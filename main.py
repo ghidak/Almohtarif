@@ -467,7 +467,7 @@ async def fetch_proxies_periodically():
                         print(f"⚠️ فشل في جلب البروكسيات. كود الاستجابة: {response.status}")
         except Exception as e:
             print(f"❌ حدث خطأ أثناء جلب البروكسيات: {e}")
-        await asyncio.sleep(300)  # انتظر 5 دقائق
+        await asyncio.sleep(2 * 60 * 60)  # انتظر 5 دقائق
 
 
 async def main():
