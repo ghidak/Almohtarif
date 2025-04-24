@@ -457,12 +457,12 @@ async def fetch_proxies_periodically():
                         print("📥 البيانات المستلمة من API:")
                         print(text)
                         proxies = [line.strip() for line in text.splitlines() if line.strip()]
-                        selected = proxies[:3]
+                        selected = proxies[:10]
                         if selected:
                             with open("proxies.txt", "a", encoding="utf-8") as f:
                                 for proxy in selected:
                                     f.write(proxy + "\n")
-                            print("✅ تم جلب 3 بروكسيات جديدة.")
+                            print("✅ تم جلب 10 بروكسيات جديدة.")
                     else:
                         print(f"⚠️ فشل في جلب البروكسيات. كود الاستجابة: {response.status}")
         except Exception as e:
