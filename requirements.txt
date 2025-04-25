@@ -6,3 +6,5 @@ flask
 
 aiohttp-socks
 requests
+beautifulsoup4
+lxml
