@@ -247,7 +247,14 @@ admin_buttons = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")],
     [InlineKeyboardButton(text="🛑 عرض البروكسيات السيئة", callback_data="bad_proxies")],
     [InlineKeyboardButton(text="🌐 إعدادات API", callback_data="api_settings")]
-])
+]
+    [InlineKeyboardButton(text="🗑️ حذف بروكسي", callback_data="remove_proxy")],
+    [InlineKeyboardButton(text="📢 إرسال رسالة جماعية", callback_data="broadcast")],
+    [InlineKeyboardButton(text="✏️ تعديل نقاط مستخدم", callback_data="set_points")],
+    [InlineKeyboardButton(text="🎁 إهداء نقاط للجميع", callback_data="gift_all")],
+    [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")]
+,
+    [InlineKeyboardButton(text="🛑 عرض البروكسيات السيئة", callback_data="bad_proxies")]])
 
 @dp.message(F.text.startswith("/admin"), F.from_user.id == ADMIN_ID)
 async def admin_panel(message: Message):
@@ -467,9 +474,12 @@ async def fetch_proxies_periodically():
                 print("❌ لم يتم تحديد رابط API")
                 await asyncio.sleep(60)
                 continue
+    url = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=all&timeout=10000&country=us&ssl=all&anonymity=all"
+    headers = {"User-Agent": "Mozilla/5.0"}
 
-            headers = {"User-Agent": "Mozilla/5.0"}
-
+    while True:
+        try:
+            # تحميل البروكسيات الموجودة مسبقًا لتجنب التكرار
             existing_proxies = set()
             if os.path.exists("proxies.txt"):
                 with open("proxies.txt", "r", encoding="utf-8") as f:
@@ -479,7 +489,11 @@ async def fetch_proxies_periodically():
                 async with session.get(url, headers=headers) as response:
                     if response.status == 200:
                         text = await response.text()
+                        print("📥 البيانات المستلمة من API:")
+                        print(text)
+
                         proxies = [line.strip() for line in text.splitlines() if line.strip()]
+                        # إزالة المكررات الموجودة مسبقًا
                         new_proxies = [p for p in proxies if p not in existing_proxies]
                         selected = new_proxies[:10]
 
@@ -496,7 +510,6 @@ async def fetch_proxies_periodically():
             print(f"❌ حدث خطأ أثناء جلب البروكسيات: {e}")
 
         await asyncio.sleep(2 * 60 * 60)  # كل ساعتين
-
 
 
 
