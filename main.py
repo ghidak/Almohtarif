@@ -450,6 +450,7 @@ import aiohttp
 import asyncio
 import os
 
+
 async def fetch_proxies_periodically():
     while True:
         try:
@@ -468,12 +469,9 @@ async def fetch_proxies_periodically():
                 print("❌ لم يتم تحديد رابط API")
                 await asyncio.sleep(60)
                 continue
-    url = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=all&timeout=10000&country=us&ssl=all&anonymity=all"
-    headers = {"User-Agent": "Mozilla/5.0"}
 
-    while True:
-        try:
-            # تحميل البروكسيات الموجودة مسبقًا لتجنب التكرار
+            headers = {"User-Agent": "Mozilla/5.0"}
+
             existing_proxies = set()
             if os.path.exists("proxies.txt"):
                 with open("proxies.txt", "r", encoding="utf-8") as f:
@@ -483,11 +481,7 @@ async def fetch_proxies_periodically():
                 async with session.get(url, headers=headers) as response:
                     if response.status == 200:
                         text = await response.text()
-                        print("📥 البيانات المستلمة من API:")
-                        print(text)
-
                         proxies = [line.strip() for line in text.splitlines() if line.strip()]
-                        # إزالة المكررات الموجودة مسبقًا
                         new_proxies = [p for p in proxies if p not in existing_proxies]
                         selected = new_proxies[:10]
 
