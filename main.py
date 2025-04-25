@@ -231,7 +231,6 @@ from aiogram.types import ReplyKeyboardRemove
 import re
 
 class AdminStates(StatesGroup):
-    waiting_for_api_url = State()
     waiting_for_proxy_to_add = State()
     waiting_for_proxy_to_remove = State()
     waiting_for_broadcast = State()
@@ -244,11 +243,9 @@ admin_buttons = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📢 إرسال رسالة جماعية", callback_data="broadcast")],
     [InlineKeyboardButton(text="✏️ تعديل نقاط مستخدم", callback_data="set_points")],
     [InlineKeyboardButton(text="🎁 إهداء نقاط للجميع", callback_data="gift_all")],
-    [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")],
-    [InlineKeyboardButton(text="🛑 عرض البروكسيات السيئة", callback_data="bad_proxies")],
-    [InlineKeyboardButton(text="🌐 إعدادات API", callback_data="api_settings")]
-])
-
+    [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")]
+,
+    [InlineKeyboardButton(text="🛑 عرض البروكسيات السيئة", callback_data="bad_proxies")]])
 
 @dp.message(F.text.startswith("/admin"), F.from_user.id == ADMIN_ID)
 async def admin_panel(message: Message):
@@ -450,28 +447,13 @@ import aiohttp
 import asyncio
 import os
 
-
 async def fetch_proxies_periodically():
+    url = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=all&timeout=10000&country=us&ssl=all&anonymity=all"
+    headers = {"User-Agent": "Mozilla/5.0"}
+
     while True:
         try:
-            # قراءة حالة التفعيل
-            if os.path.exists("fetch_state.txt"):
-                with open("fetch_state.txt", "r", encoding="utf-8") as f:
-                    if f.read().strip() != "on":
-                        await asyncio.sleep(60)
-                        continue
-
-            # قراءة رابط API
-            if os.path.exists("api_url.txt"):
-                with open("api_url.txt", "r", encoding="utf-8") as f:
-                    url = f.read().strip()
-            else:
-                print("❌ لم يتم تحديد رابط API")
-                await asyncio.sleep(60)
-                continue
-
-            headers = {"User-Agent": "Mozilla/5.0"}
-
+            # تحميل البروكسيات الموجودة مسبقًا لتجنب التكرار
             existing_proxies = set()
             if os.path.exists("proxies.txt"):
                 with open("proxies.txt", "r", encoding="utf-8") as f:
@@ -481,7 +463,11 @@ async def fetch_proxies_periodically():
                 async with session.get(url, headers=headers) as response:
                     if response.status == 200:
                         text = await response.text()
+                        print("📥 البيانات المستلمة من API:")
+                        print(text)
+
                         proxies = [line.strip() for line in text.splitlines() if line.strip()]
+                        # إزالة المكررات الموجودة مسبقًا
                         new_proxies = [p for p in proxies if p not in existing_proxies]
                         selected = new_proxies[:10]
 
@@ -508,42 +494,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-@dp.callback_query(F.data == "api_settings")
-async def api_settings_menu(callback: types.CallbackQuery):
-    buttons = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🆕 تغيير رابط API", callback_data="change_api")],
-        [InlineKeyboardButton(text="🔁 تبديل الجلب التلقائي", callback_data="toggle_fetch")],
-        [InlineKeyboardButton(text="🔙 رجوع", callback_data="admin")]
-    ])
-    await callback.message.edit_text("🌐 إعدادات الـ API:", reply_markup=buttons)
-
-@dp.callback_query(F.data == "change_api")
-async def change_api_link(callback: types.CallbackQuery, state: FSMContext):
-    await callback.message.edit_text("🆕 أرسل رابط الـ API الجديد:", reply_markup=InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="🔙 رجوع", callback_data="admin")]]
-    ))
-    await state.set_state(AdminStates.waiting_for_api_url)
-
-@dp.message(AdminStates.waiting_for_api_url)
-async def save_api_url(message: Message, state: FSMContext):
-    url = message.text.strip()
-    with open("api_url.txt", "w", encoding="utf-8") as f:
-        f.write(url)
-    await message.answer("✅ تم حفظ رابط الـ API بنجاح.", reply_markup=ReplyKeyboardRemove())
-    await state.clear()
-
-@dp.callback_query(F.data == "toggle_fetch")
-async def toggle_fetching(callback: types.CallbackQuery):
-    state_file = "fetch_state.txt"
-    current_state = "off"
-
-    if os.path.exists(state_file):
-        with open(state_file, "r", encoding="utf-8") as f:
-            current_state = f.read().strip()
-
-    new_state = "on" if current_state == "off" else "off"
-    with open(state_file, "w", encoding="utf-8") as f:
-        f.write(new_state)
-
-    await callback.message.edit_text(f"🔁 تم ضبط الجلب التلقائي على: <b>{'مفعل ✅' if new_state == 'on' else 'معطل ❌'}</b>", reply_markup=admin_buttons)
