@@ -25,6 +25,22 @@ START_POINTS = 2
 REFERRAL_POINTS = 1
 
 # ---------------- أدوات مساعدة ---------------- #
+def save_user_proxy(user_id: int, proxy: str, timestamp: str):
+    with open("user_proxies.txt", "a", encoding="utf-8") as f:
+        f.write(f"{user_id}:{proxy}:{timestamp}\n")
+
+def get_user_proxy(user_id: int):
+    if not os.path.exists("user_proxies.txt"):
+        return None
+    with open("user_proxies.txt", "r", encoding="utf-8") as f:
+        for line in reversed(f.readlines()):
+            parts = line.strip().split(":")
+            if str(user_id) == parts[0]:
+                proxy = ":".join(parts[1:-1])
+                timestamp = parts[-1]
+                return proxy, timestamp
+    return None
+
 
 def user_exists(user_id):
     with open("users.txt", "r", encoding="utf-8") as f:
@@ -216,7 +232,19 @@ async def get_proxy(message: Message):
 
 
 
-    await message.answer(formatted_proxy, parse_mode=ParseMode.HTML)
+    from datetime import datetime
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+# سجل البروكسي مع التوقيت
+save_user_proxy(user_id, proxy, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+
+# زر استبدال البروكسي
+replace_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="♻️ استبدال البروكسي", callback_data="replace_proxy")]
+])
+
+await waiting_msg.edit_text(formatted_proxy, parse_mode=ParseMode.HTML, reply_markup=replace_kb)
+
 
 
 @dp.message(F.text == "🙋‍♂️ اسم المستخدم و ID")
@@ -440,6 +468,82 @@ def log_bad_proxy(proxy: str):
         print(f"خطأ في تسجيل البروكسي الغير شغال: {e}")
 
 
+from datetime import datetime, timedelta
+
+@dp.callback_query(F.data == "replace_proxy")
+async def handle_replace_proxy(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+
+    data = get_user_proxy(user_id)
+    if not data:
+        await callback.answer("❌ لا يوجد بروكسي مسجل لك.", show_alert=True)
+        return
+
+    proxy, timestamp = data
+    assigned_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    now = datetime.utcnow()
+
+    if now - assigned_time > timedelta(hours=1):
+        await callback.answer("⏰ انتهت مهلة الاستبدال. اطلب بروكسي جديد.", show_alert=True)
+        return
+
+    waiting_msg = await callback.message.edit_text("🔄 جاري تجهيز بروكسي بديل لك، انتظر قليلاً...")
+
+    # نحاول نحضر بروكسي جديد
+    new_proxy = None
+    max_attempts = 10
+    for _ in range(max_attempts):
+        candidate = get_random_proxy()
+        if candidate and await is_proxy_working(candidate):
+            new_proxy = candidate
+            break
+        else:
+            if candidate:
+                remove_proxy(candidate)
+
+    if not new_proxy:
+        await waiting_msg.edit_text("⚠️ لم يتم العثور على بروكسي بديل حالياً. حاول لاحقاً.")
+        return
+
+    # حفظ البروكسي الجديد
+    save_user_proxy(user_id, new_proxy, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+
+    # إعداد الرد مع زر جديد للاستبدال
+    proxy_parts = new_proxy.split(":", 3)
+
+    if len(proxy_parts) == 4:
+        ip, port, username, password = proxy_parts
+        formatted_proxy = f"""
+<b>♻️ تم استبدال البروكسي بنجاح!</b>
+
+<b>IP:</b> <code>{ip}</code>
+<b>PORT:</b> <code>{port}</code>
+<b>Username:</b> <code>{username}</code>
+<b>Password:</b> <code>{password}</code>
+
+🌍 <i>الولايات المتحدة الأمريكية</i>
+🕐 <i>الوقت:</i> <b>{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}</b>
+"""
+    elif len(proxy_parts) == 2:
+        ip, port = proxy_parts
+        formatted_proxy = f"""
+<b>♻️ تم استبدال البروكسي بنجاح!</b>
+
+🔹 <b>IP:</b> <code>{ip}</code>  
+🔹 <b>PORT:</b> <code>{port}</code>
+
+ℹ️ هذا البروكسي لا يحتاج إلى اسم مستخدم أو كلمة مرور.
+🌍 <i>الولايات المتحدة الأمريكية</i>
+🕐 <i>الوقت:</i> <b>{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}</b>
+"""
+    else:
+        formatted_proxy = "❌ تنسيق البروكسي غير مدعوم حالياً."
+
+    replace_kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="♻️ استبدال البروكسي", callback_data="replace_proxy")]
+    ])
+
+    await waiting_msg.edit_text(formatted_proxy, parse_mode=ParseMode.HTML, reply_markup=replace_kb)
 
 
 
