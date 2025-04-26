@@ -397,8 +397,7 @@ async def back_to_admin_panel(callback: types.CallbackQuery):
     await callback.message.edit_text("🛠️ اختر أمراً من لوحة الإدارة:", reply_markup=admin_buttons)
 
 
-from aiohttp_socks import ProxyConnector
-import aiohttp
+
 
 
 async def is_proxy_working(proxy: str) -> bool:
