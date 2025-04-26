@@ -315,7 +315,7 @@ async def handle_set_points_callback(callback: types.CallbackQuery, state: FSMCo
 async def process_set_points(message: Message, state: FSMContext):
     try:
         uid, pts = message.text.strip().split()
-        update_user_points(uid, int(pts))
+        update_user_points(int(uid), int(pts))
         await message.answer(f"✅ تم تحديث نقاط المستخدم {uid} إلى {pts}", reply_markup=ReplyKeyboardRemove())
     except:
         await message.answer("❌ الصيغة غير صحيحة. أعد المحاولة.")
