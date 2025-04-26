@@ -1,6 +1,4 @@
 import random
-from keep_alive import keep_alive
-keep_alive()
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
