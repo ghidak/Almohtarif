@@ -393,8 +393,10 @@ async def show_bad_proxies(callback: types.CallbackQuery):
 
 
 @dp.callback_query(F.data == "admin")
-async def back_to_admin_panel(callback: types.CallbackQuery):
+async def back_to_admin_panel(callback: types.CallbackQuery, state: FSMContext):
+    await state.clear()  # ⬅️ هذه الإضافة مهمة
     await callback.message.edit_text("🛠️ اختر أمراً من لوحة الإدارة:", reply_markup=admin_buttons)
+
 
 
 
