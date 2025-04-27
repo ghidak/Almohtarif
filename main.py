@@ -164,14 +164,36 @@ async def referral_link(message: Message):
 
 @dp.message(F.text == "🇺🇸 احصل على بروكسي أمريكي")
 async def get_proxy(message: Message):
-        user_id = message.from_user.id
+    user_id = message.from_user.id
 
-    # --- تبريد 1 دقيقة ---
+    # --- تبريد لمدة دقيقة ---
     now = datetime.now()
     last_request = cooldowns.get(user_id)
     if last_request and now - last_request < timedelta(minutes=1):
         remaining = 60 - (now - last_request).seconds
         return await message.answer(f"⏳ الرجاء الانتظار {remaining} ثانية قبل طلب بروكسي جديد.")
+    
+    cooldowns[user_id] = now
+
+    if not await is_user_subscribed(user_id):
+        return await message.answer(f"⚠️ يجب عليك الاشتراك في القناة أولاً:\n{CHANNEL_USERNAME}")
+
+    user = get_user_data(user_id)
+    remaining_points = user["points"]
+
+    if remaining_points < 1:
+        return await message.answer(
+            f"❌ ليس لديك نقاط كافية. لديك {remaining_points} نقطة فقط. احصل على إحالات لزيادة النقاط."
+        )
+
+    searching_message = await message.answer(
+        "🔍 <b>جاري البحث عن بروكسي مناسب...</b>\n"
+        "🛠️ <i>يتم التحقق من حالة البروكسي...</i>\n"
+        "⏳ <i>الرجاء الانتظار قليلاً...</i>"
+    )
+
+    # ... يكمل الكود كالمعتاد
+
     
     cooldowns[user_id] = now
 
