@@ -276,6 +276,12 @@ async def get_proxy(message: Message):
 
 
     await message.answer(formatted_proxy, parse_mode=ParseMode.HTML)
+    await message.answer(
+    "🎯 هل تريد المزيد من البروكسيات؟ كل إحالة تكسبك نقطة إضافية!\n"
+    "🔗 شارك رابط الإحالة الخاص بك مع أصدقائك وزد رصيدك من النقاط!\n"
+    f"https://t.me/{(await bot.get_me()).username}?start={message.from_user.id}"
+)
+
 
 
 @dp.message(F.text == "🙋‍♂️ اسم المستخدم و ID")
