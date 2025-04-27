@@ -247,6 +247,8 @@ admin_buttons = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📢 إرسال رسالة جماعية", callback_data="broadcast")],
     [InlineKeyboardButton(text="✏️ تعديل نقاط مستخدم", callback_data="set_points")],
     [InlineKeyboardButton(text="🎁 إهداء نقاط للجميع", callback_data="gift_all")],
+    [InlineKeyboardButton(text="📊 عرض المشتركين", callback_data="view_users")],
+
     [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")]
 ,
     [InlineKeyboardButton(text="🛑 عرض البروكسيات السيئة", callback_data="bad_proxies")]])
@@ -404,6 +406,20 @@ async def back_to_admin_panel(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.edit_text("🛠️ اختر أمراً من لوحة الإدارة:", reply_markup=admin_buttons)
 
 
+@dp.callback_query(F.data == "view_users")
+async def view_users(callback: types.CallbackQuery):
+    users_data = ""
+    with open("users.txt", "r", encoding="utf-8") as f:
+        for line in f:
+            user_data = line.strip().split(":")
+            if len(user_data) > 3:
+                user_id, username, points, referrals = user_data[0], user_data[1], user_data[2], user_data[3]
+                users_data += f"👤 @{username} | ID: {user_id}\n💰 نقاط: {points} | 👥 إحالات: {referrals}\n\n"
+    
+    if not users_data:
+        users_data = "❌ لا توجد بيانات للمشتركين."
+    
+    await callback.message.edit_text(f"📊 قائمة المشتركين:\n\n{users_data}", reply_markup=admin_buttons)
 
 
 
