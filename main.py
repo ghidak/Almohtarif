@@ -111,6 +111,18 @@ def main_menu():
     return kb.adjust(2).as_markup(resize_keyboard=True)
 
 # ---------------- أوامر المستخدم ---------------- #
+@dp.message(F.text == "❓ شرح الحصول على النقاط")
+async def how_to_get_points(message: Message):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 رجوع", callback_data="back_to_menu")]
+    ])
+    await message.answer(
+        "💡 <b>كيف تحصل على نقاط؟</b>\n\n"
+        "1️⃣ عند تسجيل كل مستخدم جديد عن طريق <b>رابط الإحالة</b> الخاص بك، تحصل على <b>نقطة مجانية</b>.\n"
+        "2️⃣ يتم توزيع نقاط مجانية أحياناً من قِبل الإدارة كمكافآت.\n\n"
+        "📢 شارك رابط الإحالة مع أصدقائك لزيادة رصيدك من النقاط واستخدمها للحصول على بروكسيات أمريكية! 🇺🇸",
+        reply_markup=keyboard
+    )
 
 @dp.message(CommandStart())
 async def start_cmd(message: Message):
