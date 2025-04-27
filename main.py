@@ -124,6 +124,12 @@ async def how_to_get_points(message: Message):
         reply_markup=keyboard
     )
 
+@dp.callback_query(F.data == "back_to_menu")
+async def back_to_main_menu(callback: types.CallbackQuery):
+    await callback.message.edit_text("👋 عدت للقائمة الرئيسية.", reply_markup=None)
+    await callback.message.answer("اختر من القائمة:", reply_markup=main_menu())
+
+
 @dp.message(CommandStart())
 async def start_cmd(message: Message):
     user_id = message.from_user.id
