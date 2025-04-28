@@ -464,20 +464,27 @@ async def back_to_admin_panel(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.edit_text("🛠️ اختر أمراً من لوحة الإدارة:", reply_markup=admin_buttons)
 
 
+import zipfile
+import tempfile
+
 @dp.callback_query(F.data == "view_users")
-async def view_users(callback: types.CallbackQuery):
-    users_data = ""
-    with open("users.txt", "r", encoding="utf-8") as f:
-        for line in f:
-            user_data = line.strip().split(":")
-            if len(user_data) > 3:
-                user_id, username, points, referrals = user_data[0], user_data[1], user_data[2], user_data[3]
-                users_data += f"👤 @{username} | ID: {user_id}\n💰 نقاط: {points} | 👥 إحالات: {referrals}\n\n"
-    
-    if not users_data:
-        users_data = "❌ لا توجد بيانات للمشتركين."
-    
-    await callback.message.edit_text(f"📊 قائمة المشتركين:\n\n{users_data}", reply_markup=admin_buttons)
+async def backup_files_zip(callback: types.CallbackQuery):
+    files_to_backup = ["proxies.txt", "referrals.txt", "users.txt", "bad_proxies.txt"]
+    temp_zip_path = tempfile.gettempdir() + "/backup.zip"
+
+    # إنشاء ملف مضغوط
+    with zipfile.ZipFile(temp_zip_path, "w") as backup_zip:
+        for file_name in files_to_backup:
+            if os.path.exists(file_name):
+                backup_zip.write(file_name)
+
+    # التأكد أن الملف المضغوط يحتوي شيئاً
+    if os.path.exists(temp_zip_path):
+        await bot.send_document(callback.from_user.id, types.FSInputFile(temp_zip_path))
+        await callback.answer("✅ تم إرسال النسخة الاحتياطية كملف مضغوط.")
+    else:
+        await callback.answer("❌ لا توجد ملفات لعمل نسخة احتياطية.", show_alert=True)
+
 
 
 
