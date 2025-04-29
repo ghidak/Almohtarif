@@ -175,7 +175,7 @@ async def handle_charge_points(message: Message):
         "🟢 السعر: 1 دولار = 20 نقطة\n"
         "💰 طريقة الدفع: <b>Payeer</b>\n"
         "📥 أرسل 1 دولار إلى حساب Payeer التالي:\n\n"
-        "<code>P100000000</code>\n\n"
+        "<code>P1070758061</code>\n\n"
         "ثم أرسل <b>ID التحويل</b> هنا ليتم شحن رصيدك يدويًا من قبل الإدارة.",
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
