@@ -112,6 +112,8 @@ def main_menu():
     kb.button(text="🇺🇸 احصل على بروكسي أمريكي")
     kb.button(text="🙋‍♂️ اسم المستخدم و ID")
     kb.button(text="❓ شرح الحصول على النقاط")
+    kb.button(text="💳 شحن نقاط")
+
     return kb.adjust(2).as_markup(resize_keyboard=True)
 
 # ---------------- أوامر المستخدم ---------------- #
@@ -165,6 +167,36 @@ async def referral_link(message: Message):
 @dp.message(F.text == "🇺🇸 احصل على بروكسي أمريكي")
 async def get_proxy(message: Message):
     user_id = message.from_user.id
+
+@dp.message(F.text == "💳 شحن نقاط")
+async def handle_charge_points(message: Message):
+    await message.answer(
+        "💳 <b>شحن نقاط</b>\n\n"
+        "🟢 السعر: 1 دولار = 20 نقطة\n"
+        "💰 طريقة الدفع: <b>Payeer</b>\n"
+        "📥 أرسل 1 دولار إلى حساب Payeer التالي:\n\n"
+        "<code>P100000000</code>\n\n"
+        "ثم أرسل <b>ID التحويل</b> هنا ليتم شحن رصيدك يدويًا من قبل الإدارة.",
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="🔙 رجوع", callback_data="back_to_menu")]
+            ]
+        )
+    )
+
+@dp.message(F.text.regexp(r"^P?\d{5,}$"))
+async def handle_payment_proof(message: Message):
+    user = message.from_user
+    await bot.send_message(
+        ADMIN_ID,
+        f"🆕 طلب شحن نقاط جديد:\n\n"
+        f"👤 المستخدم: @{user.username} ({user.id})\n"
+        f"💳 إثبات الدفع (Payeer): <code>{message.text}</code>\n\n"
+        f"💰 المبلغ المتوقع: 1 دولار = 20 نقطة\n"
+        f"✅ بعد التأكد، استخدم لوحة الإدارة لتعديل نقاط المستخدم."
+    )
+    await message.answer("📨 تم إرسال إثبات الدفع للإدارة. سيتم شحن 20 نقطة بعد المراجعة.")
+
 
     # --- تبريد لمدة دقيقة ---
     now = datetime.now()
