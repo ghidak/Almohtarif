@@ -212,19 +212,19 @@ async def get_proxy(message: Message):
        
 
     proxy = None
-    max_attempts = 40  # عدد المحاولات للعثور على بروكسي شغال
-    for _ in range(max_attempts):
-        candidate = get_random_proxy()
-        if candidate and await is_proxy_working(candidate):
-            proxy = candidate
-            break
-        else:
-            if candidate:
-                remove_proxy(candidate)
+    with open("proxies.txt", "r", encoding="utf-8") as f:
+        proxies = [p.strip() for p in f if p.strip()]
+    auth_proxies, no_auth_proxies = split_proxies(proxies)
+
+    # جرّب بروكسيات المصادقة أولاً
+    proxy = await find_working_proxy(auth_proxies, max_attempts=20)
+
+    # إذا لم تجد، جرّب البروكسيات العادية
+    if not proxy:
+        proxy = await find_working_proxy(no_auth_proxies, max_attempts=20)
 
     if not proxy:
         return await message.answer("⚠️ لم يتم العثور على بروكسي شغال حالياً. حاول لاحقاً.")
-
 
     # تحديث النقاط بعد الحصول على البروكسي
     update_user_points(user_id, user["points"] - 1)
@@ -487,7 +487,30 @@ async def backup_files_zip(callback: types.CallbackQuery):
 
 
 
+def split_proxies(proxies):
+    auth = []
+    no_auth = []
+    for p in proxies:
+        parts = p.split(":")
+        if len(parts) >= 4:
+            auth.append(p)
+        elif len(parts) == 2:
+            no_auth.append(p)
+    return auth, no_auth
 
+async def find_working_proxy(candidates, max_attempts=20):
+    checked = set()
+    attempts = 0
+    for candidate in candidates:
+        if candidate in checked or attempts >= max_attempts:
+            continue
+        checked.add(candidate)
+        if await is_proxy_working(candidate):
+            return candidate
+        else:
+            remove_proxy(candidate)
+            attempts += 1
+    return None
 
 async def is_proxy_working(proxy: str) -> bool:
     from aiohttp_socks import ProxyConnector
