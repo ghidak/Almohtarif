@@ -110,9 +110,11 @@ def main_menu():
     kb.button(text="🧾 الحساب")
     kb.button(text="🔗 رابط الإحالة")
     kb.button(text="🇺🇸 احصل على بروكسي أمريكي")
+    kb.button(text="🔐 احصل على بروكسي أمريكي مشفر")
     kb.button(text="🙋‍♂️ اسم المستخدم و ID")
     kb.button(text="❓ شرح الحصول على النقاط")
     return kb.adjust(2).as_markup(resize_keyboard=True)
+
 
 # ---------------- أوامر المستخدم ---------------- #
 @dp.message(F.text == "❓ شرح الحصول على النقاط")
@@ -162,9 +164,122 @@ async def account_info(message: Message):
 async def referral_link(message: Message):
     await message.answer(f"📢 رابط الإحالة الخاص بك:\nhttps://t.me/{(await bot.get_me()).username}?start={message.from_user.id}")
 
+@dp.message(F.text == "🔐 احصل على بروكسي أمريكي مشفر")
+async def get_encrypted_proxy(message: Message):
+    user_id = message.from_user.id
+
+    now = datetime.now()
+    last_request = cooldowns.get(user_id)
+    if last_request and now - last_request < timedelta(minutes=1):
+        remaining = 60 - (now - last_request).seconds
+        return await message.answer(f"⏳ الرجاء الانتظار {remaining} ثانية قبل طلب بروكسي جديد.")
+    
+    cooldowns[user_id] = now
+
+    if not await is_user_subscribed(user_id):
+        return await message.answer(f"⚠️ يجب عليك الاشتراك في القناة أولاً:\n{CHANNEL_USERNAME}")
+
+    user = get_user_data(user_id)
+    if user["points"] < 2:
+        return await message.answer("❌ تحتاج إلى 2 نقطة للحصول على بروكسي مشفر.")
+
+    await message.answer("🔍 جاري البحث عن بروكسي مشفر...\n⏳ الرجاء الانتظار...")
+
+    proxy = None
+    try:
+        with open("proxies.txt", "r", encoding="utf-8") as f:
+            proxy_list = [line.strip() for line in f if line.strip()]
+            random.shuffle(proxy_list)
+
+        for candidate in proxy_list:
+            if candidate.count(":") == 3 and await is_proxy_working(candidate):
+                proxy = candidate
+                break
+    except Exception as e:
+        return await message.answer(f"❌ حدث خطأ أثناء البحث: {e}")
+
+    if not proxy:
+        return await message.answer("❌ لم يتم العثور على بروكسي مشفر شغال حالياً.")
+
+    update_user_points(user_id, user["points"] - 2)
+    ip, port, username, password = proxy.split(":")
+
+    await message.answer(
+        f"<b>🔐 بروكسي SOCKS5 مشفر:</b>\n\n"
+        f"<b>IP:</b> <code>{ip}</code>\n"
+        f"<b>PORT:</b> <code>{port}</code>\n"
+        f"<b>Username:</b> <code>{username}</code>\n"
+        f"<b>Password:</b> <code>{password}</code>\n\n"
+        f"🌍 <i>الولايات المتحدة الأمريكية</i>\n"
+        f"🎯 <i>تم خصم 2 نقطة - نقاطك المتبقية:</i> <b>{user['points'] - 2}</b>",
+        parse_mode=ParseMode.HTML
+    )
+
+
+
 @dp.message(F.text == "🇺🇸 احصل على بروكسي أمريكي")
 async def get_proxy(message: Message):
     user_id = message.from_user.id
+
+    now = datetime.now()
+    last_request = cooldowns.get(user_id)
+    if last_request and now - last_request < timedelta(minutes=1):
+        remaining = 60 - (now - last_request).seconds
+        return await message.answer(f"⏳ الرجاء الانتظار {remaining} ثانية قبل طلب بروكسي جديد.")
+
+    cooldowns[user_id] = now
+
+    if not await is_user_subscribed(user_id):
+        return await message.answer(f"⚠️ يجب عليك الاشتراك في القناة أولاً:\n{CHANNEL_USERNAME}")
+
+    user = get_user_data(user_id)
+    if user["points"] < 1:
+        return await message.answer("❌ ليس لديك نقاط كافية. احصل على إحالات لزيادة النقاط.")
+
+    await message.answer("🔍 جاري البحث عن بروكسي عادي...\n⏳ الرجاء الانتظار...")
+
+    proxy = None
+    try:
+        with open("proxies.txt", "r", encoding="utf-8") as f:
+            proxy_list = [line.strip() for line in f if line.strip()]
+            random.shuffle(proxy_list)
+
+        for candidate in proxy_list:
+            if candidate.count(":") in [1, 3] and await is_proxy_working(candidate):
+                proxy = candidate
+                break
+    except Exception as e:
+        return await message.answer(f"❌ حدث خطأ أثناء البحث عن بروكسي: {e}")
+
+    if not proxy:
+        return await message.answer("❌ لم يتم العثور على بروكسي شغال حالياً.")
+
+    update_user_points(user_id, user["points"] - 1)
+    parts = proxy.split(":")
+
+    if len(parts) == 4:
+        ip, port, username, password = parts
+        reply = (
+            f"<b>🔌 بروكسي SOCKS5:</b>\n"
+            f"<b>IP:</b> <code>{ip}</code>\n"
+            f"<b>PORT:</b> <code>{port}</code>\n"
+            f"<b>Username:</b> <code>{username}</code>\n"
+            f"<b>Password:</b> <code>{password}</code>\n\n"
+            f"🎯 <i>تم خصم 1 نقطة - نقاطك المتبقية:</i> <b>{user['points'] - 1}</b>"
+        )
+    elif len(parts) == 2:
+        ip, port = parts
+        reply = (
+            f"<b>🔌 بروكسي SOCKS5:</b>\n"
+            f"<b>IP:</b> <code>{ip}</code>\n"
+            f"<b>PORT:</b> <code>{port}</code>\n\n"
+            f"🎯 <i>تم خصم 1 نقطة - نقاطك المتبقية:</i> <b>{user['points'] - 1}</b>"
+        )
+    else:
+        reply = "❌ تنسيق البروكسي غير مدعوم."
+
+    await message.answer(reply, parse_mode=ParseMode.HTML)
+
 
     # --- تبريد لمدة دقيقة ---
     now = datetime.now()
