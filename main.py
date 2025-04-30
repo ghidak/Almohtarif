@@ -110,11 +110,9 @@ def main_menu():
     kb.button(text="🧾 الحساب")
     kb.button(text="🔗 رابط الإحالة")
     kb.button(text="🇺🇸 احصل على بروكسي أمريكي")
-    kb.button(text="🔐 احصل على بروكسي أمريكي مشفر")
     kb.button(text="🙋‍♂️ اسم المستخدم و ID")
     kb.button(text="❓ شرح الحصول على النقاط")
     return kb.adjust(2).as_markup(resize_keyboard=True)
-
 
 # ---------------- أوامر المستخدم ---------------- #
 @dp.message(F.text == "❓ شرح الحصول على النقاط")
@@ -163,55 +161,6 @@ async def account_info(message: Message):
 @dp.message(F.text == "🔗 رابط الإحالة")
 async def referral_link(message: Message):
     await message.answer(f"📢 رابط الإحالة الخاص بك:\nhttps://t.me/{(await bot.get_me()).username}?start={message.from_user.id}")
-
-@dp.message(F.text == "🔐 احصل على بروكسي أمريكي مشفر")
-async def get_encrypted_proxy(message: Message):
-    user_id = message.from_user.id
-
-    now = datetime.now()
-    last_request = cooldowns.get(user_id)
-    if last_request and now - last_request < timedelta(minutes=1):
-        remaining = 60 - (now - last_request).seconds
-        return await message.answer(f"⏳ الرجاء الانتظار {remaining} ثانية قبل طلب بروكسي جديد.")
-    
-    cooldowns[user_id] = now
-
-    if not await is_user_subscribed(user_id):
-        return await message.answer(f"⚠️ يجب عليك الاشتراك في القناة أولاً:\n{CHANNEL_USERNAME}")
-
-    user = get_user_data(user_id)
-    if user["points"] < 2:
-        return await message.answer("❌ تحتاج إلى 2 نقطة للحصول على بروكسي مشفر.")
-
-    searching_message = await message.answer("🔍 <b>جاري البحث عن بروكسي مشفر...</b>\n⏳ الرجاء الانتظار...")
-
-    proxy = None
-    for _ in range(10):
-        candidate = get_random_proxy()
-        if candidate and candidate.count(":") == 3 and await is_proxy_working(candidate):
-            proxy = candidate
-            break
-        else:
-            if candidate:
-                remove_proxy(candidate)
-
-    if not proxy:
-        return await searching_message.edit_text("❌ لم يتم العثور على بروكسي مشفر يعمل حالياً.")
-
-    update_user_points(user_id, user["points"] - 2)
-
-    ip, port, usern, passw = proxy.split(":", 3)
-    await message.answer(
-        f"<b>🔐 بروكسي SOCKS5 مشفر:</b>\n\n"
-        f"<b>IP:</b> <code>{ip}</code>\n"
-        f"<b>PORT:</b> <code>{port}</code>\n"
-        f"<b>Username:</b> <code>{usern}</code>\n"
-        f"<b>Password:</b> <code>{passw}</code>\n\n"
-        f"🌍 <i>الولايات المتحدة الأمريكية</i>\n"
-        f"🎯 <i>تم خصم 2 نقطة - نقاطك المتبقية:</i> <b>{user['points'] - 2}</b>",
-        parse_mode=ParseMode.HTML
-    )
-
 
 @dp.message(F.text == "🇺🇸 احصل على بروكسي أمريكي")
 async def get_proxy(message: Message):
