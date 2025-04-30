@@ -263,15 +263,16 @@ async def get_proxy(message: Message):
        
 
     proxy = None
-    max_attempts = 10  # عدد المحاولات للعثور على بروكسي شغال
-    for _ in range(max_attempts):
-        candidate = get_random_proxy()
-        if candidate and await is_proxy_working(candidate):
-            proxy = candidate
-            break
-        else:
-            if candidate:
-                remove_proxy(candidate)
+max_attempts = 10  # عدد المحاولات للعثور على بروكسي شغال بتنسيق IP:PORT فقط
+for _ in range(max_attempts):
+    candidate = get_random_proxy()
+    if candidate and candidate.count(":") == 1 and await is_proxy_working(candidate):
+        proxy = candidate
+        break
+    else:
+        if candidate:
+            remove_proxy(candidate)
+
 
     if not proxy:
         return await message.answer("⚠️ لم يتم العثور على بروكسي شغال حالياً. حاول لاحقاً.")
