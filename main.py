@@ -198,19 +198,21 @@ async def get_encrypted_proxy(message: Message):
     for _ in range(10):
        candidate = get_random_proxy_encrypted()
 
-        if candidate and candidate.count(":") == 4 and await is_proxy_working(candidate):
-            proxy = candidate
-            break
-        else:
-            if candidate:
-                remove_proxy(candidate)
+if candidate and candidate.count(":") == 3 and await is_proxy_working(candidate):
+    proxy = candidate
+    break
+else:
+    if candidate:
+        remove_proxy(candidate)
 
-    if not proxy:
-        return await searching_message.edit_text("❌ لم يتم العثور على بروكسي مشفر يعمل حالياً.")
+if not proxy:
+    return await searching_message.edit_text("❌ لم يتم العثور على بروكسي مشفر يعمل حالياً.")
 
-    update_user_points(user_id, user["points"] - 2)
+update_user_points(user_id, user["points"] - 2)
 
-    ip, port, usern, passw = proxy.split(":", 3)
+ip, port, usern, passw = proxy.split(":", 3)
+
+
     await message.answer(
         f"<b>🔐 بروكسي SOCKS5 مشفر:</b>\n\n"
         f"<b>IP:</b> <code>{ip}</code>\n"
