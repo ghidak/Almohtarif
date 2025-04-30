@@ -212,7 +212,7 @@ async def get_proxy(message: Message):
        
 
     proxy = None
-    max_attempts = 20  # عدد المحاولات للعثور على بروكسي شغال
+    max_attempts = 40  # عدد المحاولات للعثور على بروكسي شغال
     for _ in range(max_attempts):
         candidate = get_random_proxy()
         if candidate and await is_proxy_working(candidate):
