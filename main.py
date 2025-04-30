@@ -198,7 +198,7 @@ async def get_encrypted_proxy(message: Message):
     for _ in range(10):
        candidate = get_random_proxy_encrypted()
 
-        if candidate and candidate.count(":") == 3 and await is_proxy_working(candidate):
+        if candidate and candidate.count(":") == 4 and await is_proxy_working(candidate):
             proxy = candidate
             break
         else:
