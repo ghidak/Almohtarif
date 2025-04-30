@@ -212,7 +212,7 @@ async def get_proxy(message: Message):
        
 
     proxy = None
-    max_attempts = 10  # عدد المحاولات للعثور على بروكسي شغال
+    max_attempts = 20  # عدد المحاولات للعثور على بروكسي شغال
     for _ in range(max_attempts):
         candidate = get_random_proxy()
         if candidate and await is_proxy_working(candidate):
@@ -555,7 +555,7 @@ async def fetch_proxies_periodically():
                         proxies = [line.strip() for line in text.splitlines() if line.strip()]
                         # إزالة المكررات الموجودة مسبقًا
                         new_proxies = [p for p in proxies if p not in existing_proxies]
-                        selected = new_proxies[:10]
+                        selected = new_proxies[:5]
 
                         if selected:
                             with open("proxies.txt", "a", encoding="utf-8") as f:
