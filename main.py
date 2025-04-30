@@ -81,18 +81,20 @@ def add_points(user_id, amount):
         update_user_points(user_id, user["points"] + amount)
 
 def get_random_proxy():
-    with open("proxies.txt", "r", encoding="utf-8") as f:
+    with open("proxies_us.txt", "r", encoding="utf-8") as f:
         proxies = [p.strip() for p in f if p.strip()]
         return random.choice(proxies) if proxies else None
 
+
 def remove_proxy(proxy):
     lines = []
-    with open("proxies.txt", "r", encoding="utf-8") as f:
+    with open("proxies_us.txt", "r", encoding="utf-8") as f:
         lines = f.readlines()
-    with open("proxies.txt", "w", encoding="utf-8") as f:
+    with open("proxies_us.txt", "w", encoding="utf-8") as f:
         for line in lines:
             if line.strip() != proxy:
                 f.write(line)
+
 
 # ---------------- التحقق من الاشتراك ---------------- #
 
@@ -590,10 +592,9 @@ async def fetch_proxies_periodically():
 
     while True:
         try:
-            # تحميل البروكسيات الموجودة مسبقًا لتجنب التكرار
             existing_proxies = set()
-            if os.path.exists("proxies.txt"):
-                with open("proxies.txt", "r", encoding="utf-8") as f:
+            if os.path.exists("proxies_us.txt"):
+                with open("proxies_us.txt", "r", encoding="utf-8") as f:
                     existing_proxies = set(line.strip() for line in f if line.strip())
 
             async with aiohttp.ClientSession() as session:
@@ -604,12 +605,11 @@ async def fetch_proxies_periodically():
                         print(text)
 
                         proxies = [line.strip() for line in text.splitlines() if line.strip()]
-                        # إزالة المكررات الموجودة مسبقًا
                         new_proxies = [p for p in proxies if p not in existing_proxies]
                         selected = new_proxies[:10]
 
                         if selected:
-                            with open("proxies.txt", "a", encoding="utf-8") as f:
+                            with open("proxies_us.txt", "a", encoding="utf-8") as f:
                                 for proxy in selected:
                                     f.write(proxy + "\n")
                             print(f"✅ تم جلب {len(selected)} بروكسي جديد.")
