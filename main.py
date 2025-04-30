@@ -501,9 +501,7 @@ def split_proxies(proxies):
 async def find_working_proxy(candidates, max_attempts=20):
     checked = set()
     attempts = 0
-    pool = candidates.copy()
-    random.shuffle(pool)  # خلط القائمة عشوائيًا
-    for candidate in pool:
+    for candidate in candidates:
         if candidate in checked or attempts >= max_attempts:
             continue
         checked.add(candidate)
