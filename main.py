@@ -94,25 +94,6 @@ def remove_proxy(proxy):
             if line.strip() != proxy:
                 f.write(line)
 
-def get_random_us_proxy():
-    try:
-        with open("proxies_us.txt", "r", encoding="utf-8") as f:
-            proxies = [p.strip() for p in f if p.strip()]
-            return random.choice(proxies) if proxies else None
-    except FileNotFoundError:
-        return None
-
-def remove_proxy_from_file(proxy, file_path):
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        with open(file_path, "w", encoding="utf-8") as f:
-            for line in lines:
-                if line.strip() != proxy.strip():
-                    f.write(line)
-    except Exception as e:
-        print(f"خطأ في حذف البروكسي: {e}")
-
 # ---------------- التحقق من الاشتراك ---------------- #
 
 async def is_user_subscribed(user_id):
@@ -128,12 +109,10 @@ def main_menu():
     kb = ReplyKeyboardBuilder()
     kb.button(text="🧾 الحساب")
     kb.button(text="🔗 رابط الإحالة")
-    kb.button(text="🇺🇸 بروكسي أمريكي")
-    kb.button(text="🔐 بروكسي أمريكي مشفر")
+    kb.button(text="🇺🇸 احصل على بروكسي أمريكي")
     kb.button(text="🙋‍♂️ اسم المستخدم و ID")
     kb.button(text="❓ شرح الحصول على النقاط")
     return kb.adjust(2).as_markup(resize_keyboard=True)
-
 
 # ---------------- أوامر المستخدم ---------------- #
 @dp.message(F.text == "❓ شرح الحصول على النقاط")
@@ -187,62 +166,6 @@ async def referral_link(message: Message):
 async def get_proxy(message: Message):
     user_id = message.from_user.id
 
-@dp.message(F.text == "🔐 بروكسي أمريكي مشفر")
-async def get_encrypted_us_proxy(message: Message):
-    user_id = message.from_user.id
-    now = datetime.now()
-    last_request = cooldowns.get(user_id)
-    if last_request and now - last_request < timedelta(minutes=1):
-        remaining = 60 - (now - last_request).seconds
-        return await message.answer(f"⏳ الرجاء الانتظار {remaining} ثانية قبل طلب بروكسي جديد.")
-    cooldowns[user_id] = now
-
-    if not await is_user_subscribed(user_id):
-        return await message.answer(f"⚠️ يجب عليك الاشتراك في القناة أولاً:\n{CHANNEL_USERNAME}")
-
-    user = get_user_data(user_id)
-    if user["points"] < 2:
-        return await message.answer("❌ يتطلب هذا البروكسي 2 نقطة. لديك حالياً فقط "
-                                     f"{user['points']} نقطة.")
-
-    await message.answer("🔍 <b>جاري البحث عن بروكسي مشفر...</b>\n⏳ الرجاء الانتظار قليلاً...")
-
-    proxy = None
-    for _ in range(10):
-        candidate = get_random_us_proxy()
-        if candidate and await is_proxy_working(candidate):
-            proxy = candidate
-            break
-        elif candidate:
-            remove_proxy_from_file(candidate, "proxies_us.txt")
-
-    if not proxy:
-        return await message.answer("⚠️ لم يتم العثور على بروكسي مشفر شغال حالياً. حاول لاحقاً.")
-
-    update_user_points(user_id, user["points"] - 2)
-    proxy_parts = proxy.split(":", 3)
-
-    if len(proxy_parts) == 4:
-        ip, port, username, password = proxy_parts
-        formatted_proxy = f"""
-<b>🔐 تم تخصيص بروكسي SOCKS5 مشفر:</b>
-
-🔹 <b>IP:</b> <code>{ip}</code>  
-🔹 <b>PORT:</b> <code>{port}</code>
-🔹 <b>Username:</b> <code>{username}</code>
-🔹 <b>Password:</b> <code>{password}</code>
-
-🌍 <i>الموقع:</i> <b>الولايات المتحدة الأمريكية</b>  
-🕐 <i>الوقت:</i> <b>{message.date.strftime('%Y-%m-%d %H:%M:%S')}</b>
-
-🎉 <i>تم خصم 2 نقطة من رصيدك.</i>  
-🔴 <i>نقاطك المتبقية:</i> <b>{user['points'] - 2}</b>
-"""
-    else:
-        formatted_proxy = "❌ تنسيق البروكسي غير مدعوم حالياً."
-
-    await message.answer(formatted_proxy)
-    
     # --- تبريد لمدة دقيقة ---
     now = datetime.now()
     last_request = cooldowns.get(user_id)
@@ -406,15 +329,10 @@ def format_proxy(proxy: str) -> str:
 @dp.message(AdminStates.waiting_for_proxy_to_add)
 async def process_add_proxy(message: Message, state: FSMContext):
     proxy = format_proxy(message.text)
-    if proxy.count(":") == 3:
-        with open("proxies_us.txt", "a", encoding="utf-8") as f:
-            f.write(proxy + "\n")
-    else:
-        with open("proxies.txt", "a", encoding="utf-8") as f:
-            f.write(proxy + "\n")
+    with open("proxies.txt", "a", encoding="utf-8") as f:
+        f.write(proxy + "\n")
     await message.answer("✅ تم إضافة البروكسي.", reply_markup=ReplyKeyboardRemove())
     await state.clear()
-
 
 @dp.callback_query(F.data == "remove_proxy")
 async def handle_remove_proxy_callback(callback: types.CallbackQuery, state: FSMContext):
