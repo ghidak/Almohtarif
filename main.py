@@ -80,8 +80,15 @@ def add_points(user_id, amount):
     if user:
         update_user_points(user_id, user["points"] + amount)
 
-def get_random_proxy():
+# لجلب بروكسي من ملف proxies_us.txt (العادي)
+def get_random_proxy_us():
     with open("proxies_us.txt", "r", encoding="utf-8") as f:
+        proxies = [p.strip() for p in f if p.strip()]
+        return random.choice(proxies) if proxies else None
+
+# لجلب بروكسي مشفر من ملف proxies.txt
+def get_random_proxy_encrypted():
+    with open("proxies.txt", "r", encoding="utf-8") as f:
         proxies = [p.strip() for p in f if p.strip()]
         return random.choice(proxies) if proxies else None
 
@@ -189,7 +196,8 @@ async def get_encrypted_proxy(message: Message):
 
     proxy = None
     for _ in range(10):
-        candidate = get_random_proxy()
+       candidate = get_random_proxy_encrypted()
+
         if candidate and candidate.count(":") == 3 and await is_proxy_working(candidate):
             proxy = candidate
             break
