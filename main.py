@@ -215,13 +215,23 @@ async def get_proxy(message: Message):
     with open("proxies.txt", "r", encoding="utf-8") as f:
         proxies = [p.strip() for p in f if p.strip()]
     auth_proxies, no_auth_proxies = split_proxies(proxies)
+    def weighted_shuffle(auth_proxies, no_auth_proxies, auth_weight=3):
+    """
+    يعيد قائمة بروكسيات مختلطة مع أفضلية لبروكسيات المصادقة (auth_proxies).
+    auth_weight: عدد مرات تكرار بروكسيات المصادقة لإعطائها وزن أعلى.
+    """
+    if auth_proxies:
+        weighted_list = auth_proxies * auth_weight + no_auth_proxies
+    else:
+        weighted_list = no_auth_proxies.copy()
+    random.shuffle(weighted_list)
+    return weighted_list
+
 
     # جرّب بروكسيات المصادقة أولاً
-    proxy = await find_working_proxy(auth_proxies, max_attempts=20)
+   all_proxies = weighted_shuffle(auth_proxies, no_auth_proxies)
+proxy = await find_working_proxy(all_proxies, max_attempts=20)
 
-    # إذا لم تجد، جرّب البروكسيات العادية
-    if not proxy:
-        proxy = await find_working_proxy(no_auth_proxies, max_attempts=20)
 
     if not proxy:
         return await message.answer("⚠️ لم يتم العثور على بروكسي شغال حالياً. حاول لاحقاً.")
