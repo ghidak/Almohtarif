@@ -172,7 +172,7 @@ async def get_proxy(message: Message):
     if last_request and now - last_request < timedelta(minutes=1):
         remaining = 60 - (now - last_request).seconds
         return await message.answer(f"⏳ الرجاء الانتظار {remaining} ثانية قبل طلب بروكسي جديد.")
-    
+
     cooldowns[user_id] = now
 
     if not await is_user_subscribed(user_id):
@@ -192,38 +192,13 @@ async def get_proxy(message: Message):
         "⏳ <i>الرجاء الانتظار قليلاً...</i>"
     )
 
-    # ... يكمل الكود كالمعتاد
-
-    
-    cooldowns[user_id] = now
-
-
-    if not await is_user_subscribed(user_id):
-        return await message.answer(f"⚠️ يجب عليك الاشتراك في القناة أولاً:\n{CHANNEL_USERNAME}")
-
-    user = get_user_data(user_id)
-    remaining_points = user["points"]
-
-    if remaining_points < 1:
-        return await message.answer(
-            f"❌ ليس لديك نقاط كافية. لديك {remaining_points} نقطة فقط. احصل على إحالات لزيادة النقاط."
-        )
-
-       
-
-    proxy = None
+    # قراءة البروكسيات من الملف وتقسيمها
     with open("proxies.txt", "r", encoding="utf-8") as f:
         proxies = [p.strip() for p in f if p.strip()]
     auth_proxies, no_auth_proxies = split_proxies(proxies)
-   
 
-# جرّب البروكسيات بوزن عشوائي
-all_proxies = weighted_shuffle(auth_proxies, no_auth_proxies)
-proxy = await find_working_proxy(all_proxies, max_attempts=20)
-
-    
-
-
+    all_proxies = weighted_shuffle(auth_proxies, no_auth_proxies)
+    proxy = await find_working_proxy(all_proxies, max_attempts=20)
 
     if not proxy:
         return await message.answer("⚠️ لم يتم العثور على بروكسي شغال حالياً. حاول لاحقاً.")
@@ -231,53 +206,52 @@ proxy = await find_working_proxy(all_proxies, max_attempts=20)
     # تحديث النقاط بعد الحصول على البروكسي
     update_user_points(user_id, user["points"] - 1)
 
-    # تقسيم البروكسي إلى معلومات منفصلة (نفترض أن البروكسي يحتوي على (IP:PORT:USER:PASS))
+    # تقسيم البروكسي إلى معلومات منفصلة
     proxy_parts = proxy.split(":", 3)
 
     if len(proxy_parts) == 4:
         ip, port, username, password = proxy_parts
         formatted_proxy = f"""
-    <b>🔌 تم تخصيص بروكسي أمريكي لك!</b>
-    <i>إليك التفاصيل:</i>
+<b>🔌 تم تخصيص بروكسي أمريكي لك!</b>
+<i>إليك التفاصيل:</i>
 
-    <b>IP:</b> <code>{ip}</code>
-    <b>PORT:</b> <code>{port}</code>
-    <b>Username:</b> <code>{username}</code>
-    <b>Password:</b> <code>{password}</code>
+<b>IP:</b> <code>{ip}</code>
+<b>PORT:</b> <code>{port}</code>
+<b>Username:</b> <code>{username}</code>
+<b>Password:</b> <code>{password}</code>
 
-    🌍 <i>الموقع:</i> <b>الولايات المتحدة الأمريكية</b>
-    🕐 <i>تم التخصيص في:</i> <b>{message.date.strftime('%Y-%m-%d %H:%M:%S')}</b>
+🌍 <i>الموقع:</i> <b>الولايات المتحدة الأمريكية</b>
+🕐 <i>تم التخصيص في:</i> <b>{message.date.strftime('%Y-%m-%d %H:%M:%S')}</b>
 
-    🎉 <i>تم خصم 1 نقطة من رصيدك.</i>
-    🔴 <i>نقاطك المتبقية:</i> <b>{user['points'] - 1}</b>
-    """
+🎉 <i>تم خصم 1 نقطة من رصيدك.</i>
+🔴 <i>نقاطك المتبقية:</i> <b>{user['points'] - 1}</b>
+"""
     elif len(proxy_parts) == 2:
         ip, port = proxy_parts
         formatted_proxy = f"""
-    <b>🔌 تم تخصيص بروكسي SOCKS5 لك!</b>
+<b>🔌 تم تخصيص بروكسي SOCKS5 لك!</b>
 
-    🔹 <b>IP:</b> <code>{ip}</code>  
-    🔹 <b>PORT:</b> <code>{port}</code>
+🔹 <b>IP:</b> <code>{ip}</code>
+🔹 <b>PORT:</b> <code>{port}</code>
 
-    ℹ️ هذا البروكسي لا يحتاج إلى اسم مستخدم أو كلمة مرور — فقط استخدم الـ IP والبورت في إعدادات التطبيق.
+ℹ️ هذا البروكسي لا يحتاج إلى اسم مستخدم أو كلمة مرور — فقط استخدم الـ IP والبورت في إعدادات التطبيق.
 
-    🌍 <i>الموقع:</i> <b>الولايات المتحدة الأمريكية</b>  
-    🕐 <i>الوقت:</i> <b>{message.date.strftime('%Y-%m-%d %H:%M:%S')}</b>
+🌍 <i>الموقع:</i> <b>الولايات المتحدة الأمريكية</b>
+🕐 <i>الوقت:</i> <b>{message.date.strftime('%Y-%m-%d %H:%M:%S')}</b>
 
-    🎉 <i>تم خصم 1 نقطة من رصيدك.</i>  
-    🔴 <i>نقاطك المتبقية:</i> <b>{user['points'] - 1}</b>
-    """
+🎉 <i>تم خصم 1 نقطة من رصيدك.</i>
+🔴 <i>نقاطك المتبقية:</i> <b>{user['points'] - 1}</b>
+"""
     else:
         formatted_proxy = "❌ تنسيق البروكسي غير مدعوم حالياً."
 
-
-
     await message.answer(formatted_proxy, parse_mode=ParseMode.HTML)
     await message.answer(
-    "🎯 هل تريد المزيد من البروكسيات؟ كل إحالة تكسبك نقطة إضافية!\n"
-    "🔗 شارك رابط الإحالة الخاص بك مع أصدقائك وزد رصيدك من النقاط!\n"
-    f"https://t.me/{(await bot.get_me()).username}?start={message.from_user.id}"
-)
+        "🎯 هل تريد المزيد من البروكسيات؟ كل إحالة تكسبك نقطة إضافية!\n"
+        "🔗 شارك رابط الإحالة الخاص بك مع أصدقائك وزد رصيدك من النقاط!\n"
+        f"https://t.me/{(await bot.get_me()).username}?start={message.from_user.id}"
+    )
+
 
 
 
