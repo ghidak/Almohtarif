@@ -542,7 +542,7 @@ import asyncio
 import os
 
 async def fetch_proxies_periodically():
-    url = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=all&timeout=10000&country=us&ssl=all&anonymity=all"
+    url = "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks4&timeout=10000&country=us&ssl=all&anonymity=all"
     headers = {"User-Agent": "Mozilla/5.0"}
 
     while True:
