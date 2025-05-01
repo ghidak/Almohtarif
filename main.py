@@ -216,7 +216,7 @@ async def get_proxy(message: Message):
         proxies = [p.strip() for p in f if p.strip()]
     auth_proxies, no_auth_proxies = split_proxies(proxies)
     
-    def weighted_shuffle(auth_proxies, no_auth_proxies, auth_weight=3):
+def weighted_shuffle(auth_proxies, no_auth_proxies, auth_weight=3):
     """
     يعيد قائمة بروكسيات مختلطة مع أفضلية لبروكسيات المصادقة (auth_proxies).
     """
@@ -227,10 +227,8 @@ async def get_proxy(message: Message):
     random.shuffle(weighted_list)
     return weighted_list
 
-
-
-    # جرّب بروكسيات المصادقة أولاً
-   all_proxies = weighted_shuffle(auth_proxies, no_auth_proxies)
+# جرّب البروكسيات بوزن عشوائي
+all_proxies = weighted_shuffle(auth_proxies, no_auth_proxies)
 proxy = await find_working_proxy(all_proxies, max_attempts=20)
 
 
