@@ -215,10 +215,10 @@ async def get_proxy(message: Message):
     with open("proxies.txt", "r", encoding="utf-8") as f:
         proxies = [p.strip() for p in f if p.strip()]
     auth_proxies, no_auth_proxies = split_proxies(proxies)
+    
     def weighted_shuffle(auth_proxies, no_auth_proxies, auth_weight=3):
     """
     يعيد قائمة بروكسيات مختلطة مع أفضلية لبروكسيات المصادقة (auth_proxies).
-    auth_weight: عدد مرات تكرار بروكسيات المصادقة لإعطائها وزن أعلى.
     """
     if auth_proxies:
         weighted_list = auth_proxies * auth_weight + no_auth_proxies
@@ -226,6 +226,7 @@ async def get_proxy(message: Message):
         weighted_list = no_auth_proxies.copy()
     random.shuffle(weighted_list)
     return weighted_list
+
 
 
     # جرّب بروكسيات المصادقة أولاً
