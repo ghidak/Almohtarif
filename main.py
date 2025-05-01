@@ -541,7 +541,7 @@ async def is_proxy_working(proxy: str) -> bool:
     log_bad_proxy(proxy)
     return False
 
- def weighted_shuffle(auth_proxies, no_auth_proxies, auth_weight=3):
+def weighted_shuffle(auth_proxies, no_auth_proxies, auth_weight=3):
     """
     يعيد قائمة بروكسيات مختلطة مع أفضلية لبروكسيات المصادقة (auth_proxies).
     """
