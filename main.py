@@ -270,7 +270,7 @@ async def manual_charge(message: Message, state: FSMContext):
     await state.set_state("awaiting_payment_proof")
     await message.answer(
         "💸 <b>لطلب شحن النقاط (20 نقطة مقابل 1 دولار):</b>\n\n"
-        "1️⃣ أرسل 1 دولار إلى حساب Payeer التالي:\n<code>P12345678</code>\n"
+        "1️⃣ أرسل 1 دولار إلى حساب Payeer التالي:\n<code>P1070758061</code>\n"
         "2️⃣ بعد الدفع، اضغط على الزر أدناه لإرسال إثبات الدفع.\n"
         "📤 سيتم إرسال إثباتك للمسؤول لمراجعته.",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
