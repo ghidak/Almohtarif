@@ -13,7 +13,6 @@ import os
 from dotenv import load_dotenv
 from aiogram.types import CallbackQuery
 from tkinter import filedialog, messagebox
-
 # تحميل المتغيرات من ملف .env
 load_dotenv()
 
