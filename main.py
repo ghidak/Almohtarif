@@ -563,7 +563,7 @@ async def fetch_proxies_periodically():
                         proxies = [line.strip() for line in text.splitlines() if line.strip()]
                         # إزالة المكررات الموجودة مسبقًا
                         new_proxies = [p for p in proxies if p not in existing_proxies]
-                        selected = new_proxies[:5]
+                        selected = new_proxies[:2]
 
                         if selected:
                             with open("proxies.txt", "a", encoding="utf-8") as f:
