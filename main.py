@@ -114,6 +114,7 @@ def main_menu():
     kb.button(text="🇺🇸 احصل على بروكسي أمريكي")
     kb.button(text="🙋‍♂️ اسم المستخدم و ID")
     kb.button(text="❓ شرح الحصول على النقاط")
+    kb.button(text="💳 شحن النقاط")  # زر جديد
     return kb.adjust(2).as_markup(resize_keyboard=True)
 
 # ---------------- أوامر المستخدم ---------------- #
@@ -262,6 +263,35 @@ async def user_info(message: Message):
     await message.answer(f"👤 معرفك: @{message.from_user.username}\n🆔 ID: {message.from_user.id}")
 
 
+@dp.message(F.text == "💳 شحن النقاط")
+async def manual_charge(message: Message, state: FSMContext):
+    await state.set_state("awaiting_payment_proof")
+    await message.answer(
+        "💸 <b>لطلب شحن النقاط (20 نقطة مقابل 1 دولار):</b>\n\n"
+        "1️⃣ أرسل 1 دولار إلى حساب Payeer التالي:\n<code>P12345678</code>\n"
+        "2️⃣ بعد الدفع، اضغط على الزر أدناه لإرسال إثبات الدفع.\n"
+        "📤 سيتم إرسال إثباتك للمسؤول لمراجعته.",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="📤 أرسل إثبات الدفع", callback_data="send_proof")]
+        ]),
+        parse_mode="HTML"
+    )
+
+@dp.callback_query(F.data == "send_proof")
+async def ask_for_proof(callback: CallbackQuery, state: FSMContext):
+    await state.set_state("awaiting_payment_proof")
+    await callback.message.answer("📸 من فضلك أرسل الآن صورة أو لقطة شاشة لإثبات الدفع:")
+    await callback.answer()
+
+@dp.message(StateFilter("awaiting_payment_proof"))
+async def receive_proof(message: Message, state: FSMContext):
+    admin_id = int(os.getenv("ADMIN_ID"))  # تأكد أنك ضبطت هذا المتغير في Replit
+    if message.photo or message.document or message.text:
+        await message.forward(admin_id)
+        await message.answer("✅ تم إرسال إثبات الدفع للمسؤول.\n⏳ سيتم مراجعة الطلب قريبًا.")
+        await state.clear()
+    else:
+        await message.answer("❌ يجب إرسال صورة أو مستند أو نص كإثبات دفع.")
 
 # ---------------- لوحة الإدارة ---------------- #
 
