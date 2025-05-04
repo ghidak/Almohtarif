@@ -284,7 +284,6 @@ admin_buttons = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📊 عرض المشتركين", callback_data="view_users")],
     [InlineKeyboardButton(text="🧹 مسح البروكسيات", callback_data="clear_proxies")],
 
-
     [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")]
 ,
     [InlineKeyboardButton(text="🛑 عرض البروكسيات السيئة", callback_data="bad_proxies")]])
