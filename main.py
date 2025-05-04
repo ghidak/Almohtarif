@@ -330,7 +330,7 @@ admin_buttons = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📢 إرسال رسالة جماعية", callback_data="broadcast")],
     [InlineKeyboardButton(text="✏️ تعديل نقاط مستخدم", callback_data="set_points")],
     [InlineKeyboardButton(text="🎁 إهداء نقاط للجميع", callback_data="gift_all")],
-    [InlineKeyboardButton(text="📊 عرض المشتركين", callback_data="view_users")],
+    [InlineKeyboardButton(text="📊 نسخ احتياطي", callback_data="view_users")],
     
 
     [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")]
