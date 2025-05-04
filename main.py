@@ -25,6 +25,9 @@ REFERRAL_POINTS = 1
 from datetime import datetime, timedelta
 
 cooldowns = {}  # user_id : time_of_last_request
+@dp.message()
+async def bot_in_maintenance(message: types.Message):
+    await message.answer("🚧 البوت حالياً تحت الصيانة المؤقتة. الرجاء المحاولة لاحقاً.")
 
 # ---------------- أدوات مساعدة ---------------- #
 
