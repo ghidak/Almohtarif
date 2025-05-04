@@ -104,9 +104,7 @@ async def is_user_subscribed(user_id):
         return False
 
 # ---------------- الواجهة ---------------- #
-@dp.message()
-async def bot_in_maintenance(message: types.Message):
-    await message.answer("🚧 البوت حالياً تحت الصيانة المؤقتة. الرجاء المحاولة لاحقاً.")
+
 def main_menu():
     kb = ReplyKeyboardBuilder()
     kb.button(text="🧾 الحساب")
