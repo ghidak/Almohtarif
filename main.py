@@ -287,13 +287,28 @@ async def ask_for_proof(callback: CallbackQuery, state: FSMContext):
 
 @dp.message(StateFilter("awaiting_payment_proof"))
 async def receive_proof(message: Message, state: FSMContext):
-    admin_id = int(os.getenv("ADMIN_ID"))  # تأكد أنك ضبطت هذا المتغير في Replit
-    if message.photo or message.document or message.text:
-        await message.forward(admin_id)
-        await message.answer("✅ تم إرسال إثبات الدفع للمسؤول.\n⏳ سيتم مراجعة الطلب قريبًا.")
-        await state.clear()
+    admin_id = int(os.getenv("ADMIN_ID"))  # تأكد أنك أضفت ADMIN_ID في Replit
+
+    if message.photo:
+        user = message.from_user
+        user_info = (
+            f"🧾 <b>طلب شحن جديد</b>\n"
+            f"👤 الاسم: {user.full_name}\n"
+            f"🆔 ID: <code>{user.id}</code>\n"
+            f"📛 اليوزر: @{user.username if user.username else 'لا يوجد'}\n"
+        )
+        await bot.send_photo(
+            admin_id,
+            photo=message.photo[-1].file_id,
+            caption=user_info,
+            parse_mode="HTML"
+        )
+        await message.answer("✅ تم إرسال إثبات الدفع بنجاح.\n⏳ سيتم مراجعته من قبل الإدارة.")
     else:
-        await message.answer("❌ يجب إرسال صورة أو مستند أو نص كإثبات دفع.")
+        await message.answer("❌ الرجاء إرسال صورة فقط كإثبات دفع.")
+    
+    await state.clear()
+
 
 # ---------------- لوحة الإدارة ---------------- #
 
