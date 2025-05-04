@@ -10,7 +10,6 @@ import os
 from dotenv import load_dotenv
 from aiogram.types import CallbackQuery
 
-
 # تحميل المتغيرات من ملف .env
 load_dotenv()
 
