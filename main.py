@@ -5,13 +5,10 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.client.default import DefaultBotProperties
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.context import FSMContext
-import shutil
 import asyncio
 import os
 from dotenv import load_dotenv
-from aiogram.types import CallbackQuery
+
 # تحميل المتغيرات من ملف .env
 load_dotenv()
 
@@ -115,7 +112,6 @@ def main_menu():
     kb.button(text="🇺🇸 احصل على بروكسي أمريكي")
     kb.button(text="🙋‍♂️ اسم المستخدم و ID")
     kb.button(text="❓ شرح الحصول على النقاط")
-    kb.button(text="💳 شحن النقاط")  # زر جديد
     return kb.adjust(2).as_markup(resize_keyboard=True)
 
 # ---------------- أوامر المستخدم ---------------- #
@@ -264,50 +260,6 @@ async def user_info(message: Message):
     await message.answer(f"👤 معرفك: @{message.from_user.username}\n🆔 ID: {message.from_user.id}")
 
 
-@dp.message(F.text == "💳 شحن النقاط")
-async def manual_charge(message: Message, state: FSMContext):
-    await state.set_state("awaiting_payment_proof")
-    await message.answer(
-        "💸 <b>لطلب شحن النقاط (20 نقطة مقابل 1 دولار):</b>\n\n"
-        "1️⃣ أرسل 1 دولار إلى حساب Payeer التالي:\n<code>P1070758061</code>\n"
-        "2️⃣ بعد الدفع، اضغط على الزر أدناه لإرسال إثبات الدفع.\n"
-        "📤 سيتم إرسال إثباتك للمسؤول لمراجعته.",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📤 أرسل إثبات الدفع", callback_data="send_proof")]
-        ]),
-        parse_mode="HTML"
-    )
-
-@dp.callback_query(F.data == "send_proof")
-async def ask_for_proof(callback: CallbackQuery, state: FSMContext):
-    await state.set_state("awaiting_payment_proof")
-    await callback.message.answer("📸 من فضلك أرسل الآن صورة أو لقطة شاشة لإثبات الدفع:")
-    await callback.answer()
-
-@dp.message(StateFilter("awaiting_payment_proof"))
-async def receive_proof(message: Message, state: FSMContext):
-    admin_id = int(os.getenv("ADMIN_ID"))  # تأكد أنك أضفت ADMIN_ID في Replit
-
-    if message.photo:
-        user = message.from_user
-        user_info = (
-            f"🧾 <b>طلب شحن جديد</b>\n"
-            f"👤 الاسم: {user.full_name}\n"
-            f"🆔 ID: <code>{user.id}</code>\n"
-            f"📛 اليوزر: @{user.username if user.username else 'لا يوجد'}\n"
-        )
-        await bot.send_photo(
-            admin_id,
-            photo=message.photo[-1].file_id,
-            caption=user_info,
-            parse_mode="HTML"
-        )
-        await message.answer("✅ تم إرسال إثبات الدفع بنجاح.\n⏳ سيتم مراجعته من قبل الإدارة.")
-    else:
-        await message.answer("❌ الرجاء إرسال صورة فقط كإثبات دفع.")
-    
-    await state.clear()
-
 
 # ---------------- لوحة الإدارة ---------------- #
 
@@ -329,12 +281,10 @@ admin_buttons = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📢 إرسال رسالة جماعية", callback_data="broadcast")],
     [InlineKeyboardButton(text="✏️ تعديل نقاط مستخدم", callback_data="set_points")],
     [InlineKeyboardButton(text="🎁 إهداء نقاط للجميع", callback_data="gift_all")],
-    [InlineKeyboardButton(text="📊 نسخ احتياطي", callback_data="view_users")],
-    
+    [InlineKeyboardButton(text="📊 عرض المشتركين", callback_data="view_users")],
 
     [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")]
 ,
-    [InlineKeyboardButton(text="🧹 مسح البروكسيات", callback_data="clear_proxies")],
     [InlineKeyboardButton(text="🛑 عرض البروكسيات السيئة", callback_data="bad_proxies")]])
 
 @dp.message(F.text.startswith("/admin"), F.from_user.id == ADMIN_ID)
@@ -495,37 +445,8 @@ import tempfile
 
 @dp.callback_query(F.data == "view_users")
 async def backup_files_zip(callback: types.CallbackQuery):
-    files_to_backup = ["users.txt", "proxies.txt"]
-
+    files_to_backup = ["proxies.txt", "referrals.txt", "users.txt", "bad_proxies.txt"]
     temp_zip_path = tempfile.gettempdir() + "/backup.zip"
-
-@dp.callback_query(F.data == "clear_proxies")
-async def clear_proxies_menu(callback: CallbackQuery):
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ حذف البروكسيات العاملة", callback_data="delete_working_proxies")],
-        [InlineKeyboardButton(text="❌ حذف البروكسيات السيئة", callback_data="delete_bad_proxies")],
-        [InlineKeyboardButton(text="🔙 رجوع", callback_data="admin_panel")]
-    ])
-    await callback.message.edit_text("اختر ما تريد حذفه:", reply_markup=keyboard)
-
-@dp.callback_query(F.data == "delete_working_proxies")
-async def delete_working_proxies(callback: CallbackQuery):
-    try:
-        with open("proxies.txt", "w", encoding="utf-8") as f:
-            f.write("")
-        await callback.answer("✅ تم حذف جميع البروكسيات العاملة.", show_alert=True)
-    except Exception as e:
-        await callback.answer(f"❌ حدث خطأ: {e}", show_alert=True)
-
-@dp.callback_query(F.data == "delete_bad_proxies")
-async def delete_bad_proxies(callback: CallbackQuery):
-    try:
-        with open("bad_proxies.txt", "w", encoding="utf-8") as f:
-            f.write("")
-        await callback.answer("✅ تم حذف جميع البروكسيات السيئة.", show_alert=True)
-    except Exception as e:
-        await callback.answer(f"❌ حدث خطأ: {e}", show_alert=True)
-
 
     # إنشاء ملف مضغوط
     with zipfile.ZipFile(temp_zip_path, "w") as backup_zip:
