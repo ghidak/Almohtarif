@@ -284,10 +284,11 @@ admin_buttons = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="✏️ تعديل نقاط مستخدم", callback_data="set_points")],
     [InlineKeyboardButton(text="🎁 إهداء نقاط للجميع", callback_data="gift_all")],
     [InlineKeyboardButton(text="📊 عرض المشتركين", callback_data="view_users")],
-    [InlineKeyboardButton(text="🧹 مسح البروكسيات", callback_data="clear_proxies")],
+    
 
     [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")]
 ,
+    [InlineKeyboardButton(text="🧹 مسح البروكسيات", callback_data="clear_proxies")],
     [InlineKeyboardButton(text="🛑 عرض البروكسيات السيئة", callback_data="bad_proxies")]])
 
 @dp.message(F.text.startswith("/admin"), F.from_user.id == ADMIN_ID)
