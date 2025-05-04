@@ -282,6 +282,8 @@ admin_buttons = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="✏️ تعديل نقاط مستخدم", callback_data="set_points")],
     [InlineKeyboardButton(text="🎁 إهداء نقاط للجميع", callback_data="gift_all")],
     [InlineKeyboardButton(text="📊 عرض المشتركين", callback_data="view_users")],
+    [InlineKeyboardButton(text="🧹 مسح البروكسيات", callback_data="clear_proxies")],
+
 
     [InlineKeyboardButton(text="📄 عرض البروكسيات", callback_data="available_proxies")]
 ,
@@ -447,6 +449,34 @@ import tempfile
 async def backup_files_zip(callback: types.CallbackQuery):
     files_to_backup = ["proxies.txt", "referrals.txt", "users.txt", "bad_proxies.txt"]
     temp_zip_path = tempfile.gettempdir() + "/backup.zip"
+
+@dp.callback_query(F.data == "clear_proxies")
+async def clear_proxies_menu(callback: CallbackQuery):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ حذف البروكسيات العاملة", callback_data="delete_working_proxies")],
+        [InlineKeyboardButton(text="❌ حذف البروكسيات السيئة", callback_data="delete_bad_proxies")],
+        [InlineKeyboardButton(text="🔙 رجوع", callback_data="admin_panel")]
+    ])
+    await callback.message.edit_text("اختر ما تريد حذفه:", reply_markup=keyboard)
+
+@dp.callback_query(F.data == "delete_working_proxies")
+async def delete_working_proxies(callback: CallbackQuery):
+    try:
+        with open("proxies.txt", "w", encoding="utf-8") as f:
+            f.write("")
+        await callback.answer("✅ تم حذف جميع البروكسيات العاملة.", show_alert=True)
+    except Exception as e:
+        await callback.answer(f"❌ حدث خطأ: {e}", show_alert=True)
+
+@dp.callback_query(F.data == "delete_bad_proxies")
+async def delete_bad_proxies(callback: CallbackQuery):
+    try:
+        with open("bad_proxies.txt", "w", encoding="utf-8") as f:
+            f.write("")
+        await callback.answer("✅ تم حذف جميع البروكسيات السيئة.", show_alert=True)
+    except Exception as e:
+        await callback.answer(f"❌ حدث خطأ: {e}", show_alert=True)
+
 
     # إنشاء ملف مضغوط
     with zipfile.ZipFile(temp_zip_path, "w") as backup_zip:
