@@ -496,7 +496,8 @@ import tempfile
 
 @dp.callback_query(F.data == "view_users")
 async def backup_files_zip(callback: types.CallbackQuery):
-    files_to_backup = ["proxies.txt", "referrals.txt", "users.txt", "bad_proxies.txt"]
+    files_to_backup = ["users.txt", "proxies.txt"]
+
     temp_zip_path = tempfile.gettempdir() + "/backup.zip"
 
 @dp.callback_query(F.data == "clear_proxies")
