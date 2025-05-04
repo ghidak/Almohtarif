@@ -7,7 +7,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-
+import shutil
 import asyncio
 import os
 from dotenv import load_dotenv
